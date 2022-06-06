@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Account } from './entities/account.entity';
 
 @Injectable()
@@ -16,11 +16,17 @@ export class AccountsService {
   }
 
   findAccount(id: string) {
-    return this.accounts.find((account) => account.id === id);
+    const account = this.accounts.find((account) => account.id === id);
+
+    if (!account) {
+      throw new NotFoundException(`Account #${id} not found!`);
+    }
+
+    return account;
   }
 
   findBallance(id: string) {
-    const { balance } = this.accounts.find((account) => account.id === id);
+    const { balance } = this.findAccount(id);
 
     return balance;
   }
