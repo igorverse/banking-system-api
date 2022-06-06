@@ -1,3 +1,6 @@
+import { IsNumber } from 'class-validator';
+
 export class UpdateAccountDto {
-  value: number;
+  @IsNumber()
+  readonly value: number;
 }
