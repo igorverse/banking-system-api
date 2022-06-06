@@ -1,5 +1,8 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
+import { CreateAccountDto } from './dto/create-account.dto';
+import { CreateTransferDto } from './dto/create-transfer.dto';
+import { UpdateAccountDto } from './dto/update-account.dto';
 
 @Controller('accounts')
 export class AccountsController {
@@ -21,22 +24,31 @@ export class AccountsController {
   }
 
   @Post()
-  account(@Body() body) {
-    return this.accountsService.createAccount(body);
+  account(@Body() createAccountDto: CreateAccountDto) {
+    return this.accountsService.createAccount(createAccountDto);
   }
 
   @Post(':id/transfer')
-  transferBetweenAccounts(@Param('id') id: string, @Body() body) {
-    return this.accountsService.makeATransfer(id, body);
+  transferBetweenAccounts(
+    @Param('id') id: string,
+    @Body() createTransferDto: CreateTransferDto,
+  ) {
+    return this.accountsService.makeATransfer(id, createTransferDto);
   }
 
   @Patch(':id/deposit')
-  accountDeposit(@Param('id') id: string, @Body() body) {
-    return this.accountsService.makeADeposit(id, body);
+  accountDeposit(
+    @Param('id') id: string,
+    @Body() updateAccountDto: UpdateAccountDto,
+  ) {
+    return this.accountsService.makeADeposit(id, updateAccountDto);
   }
 
   @Patch(':id/withdraw')
-  accountWithdraw(@Param('id') id: string, @Body() body) {
-    return this.accountsService.makeAWithdraw(id, body);
+  accountWithdraw(
+    @Param('id') id: string,
+    @Body() updateAccountDto: UpdateAccountDto,
+  ) {
+    return this.accountsService.makeAWithdraw(id, updateAccountDto);
   }
 }
