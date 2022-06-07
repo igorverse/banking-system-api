@@ -9,12 +9,15 @@ import { CreateAccountDto } from './dto/create-account.dto';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { Account } from './entities/account.entity';
+import { Statement } from './entities/statement.entity';
 
 @Injectable()
 export class AccountsService {
   constructor(
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
+    @InjectRepository(Statement)
+    private readonly statementRepository: Repository<Statement>,
   ) {}
 
   findAccounts() {
@@ -42,8 +45,12 @@ export class AccountsService {
     return accountBalance;
   }
 
-  findStatement(id: string) {
-    return 'Not implemented yet!';
+  async findStatement(id: string) {
+    const statement = await this.statementRepository.find({
+      where: { accountId: id },
+    });
+
+    return statement;
   }
 
   createAccount(createAccountDto: CreateAccountDto) {
@@ -73,7 +80,7 @@ export class AccountsService {
     const newTransferedAccountBalance = transferedAccount.balance + value;
 
     const transferAccountWithNewBalance = await this.accountRepository.preload({
-      id,
+      id: idAccountToTransfer,
       balance: newTransferAccountBalance,
     });
 
@@ -92,6 +99,28 @@ export class AccountsService {
     await this.accountRepository.save(transferAccountWithNewBalance);
     await this.accountRepository.save(transferedAccountWithNewBalance);
 
+    const transactionStatementTransferAccount = this.statementRepository.create(
+      {
+        accountId: id,
+        transacted_at: new Date(),
+        operation: 'transfer (send)',
+        value,
+        balance: newTransferAccountBalance,
+      },
+    );
+
+    const transactionStatementTransferedAccount =
+      this.statementRepository.create({
+        accountId: idAccountToTransfer,
+        transacted_at: new Date(),
+        operation: 'transfer (receveid)',
+        value,
+        balance: newTransferedAccountBalance,
+      });
+
+    await this.statementRepository.save(transactionStatementTransferAccount);
+    await this.statementRepository.save(transactionStatementTransferedAccount);
+
     return `Account #${id} tranfered $${value} to account #${idAccountToTransfer}`;
   }
 
@@ -109,6 +138,16 @@ export class AccountsService {
     if (!account) {
       throw new NotFoundException(`Account #${id} not found!`);
     }
+
+    const transactionStatement = this.statementRepository.create({
+      accountId: id,
+      transacted_at: new Date(),
+      operation: 'deposit',
+      value,
+      balance: newBalance,
+    });
+
+    this.statementRepository.save(transactionStatement);
 
     return this.accountRepository.save(accountWithNewBalance);
   }
@@ -133,6 +172,16 @@ export class AccountsService {
     if (!account) {
       throw new NotFoundException(`Account #${id} not found!`);
     }
+
+    const transactionStatement = this.statementRepository.create({
+      accountId: id,
+      transacted_at: new Date(),
+      operation: 'withdraw',
+      value,
+      balance: newBalance,
+    });
+
+    this.statementRepository.save(transactionStatement);
 
     return this.accountRepository.save(accountWithNewBalance);
   }
