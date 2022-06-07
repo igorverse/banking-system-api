@@ -1,6 +1,6 @@
-import { IsNumber } from 'class-validator';
+import { IsPositive } from 'class-validator';
 
 export class UpdateAccountDto {
-  @IsNumber()
+  @IsPositive()
   readonly value: number;
 }
